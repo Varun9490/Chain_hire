@@ -22,11 +22,12 @@ export enum ClusterNetwork {
 
 // ChainHire Default Clusters
 // Devnet is the primary cluster for demo and testing
-// Mainnet-beta is commented out due to CORS restrictions with public RPC
+// Using Helius free RPC to avoid rate limits on public Solana RPC
+// You can get your own free API key at https://dev.helius.xyz/
 export const defaultClusters: Cluster[] = [
   {
     name: 'devnet',
-    endpoint: clusterApiUrl('devnet'),
+    endpoint: 'https://devnet.helius-rpc.com/?api-key=6a8002c2-c911-4223-b881-83f4726a8429', // Alternative: use Helius 'https://devnet.helius-rpc.com/?api-key=YOUR_API_KEY'
     network: ClusterNetwork.Devnet,
   },
   {

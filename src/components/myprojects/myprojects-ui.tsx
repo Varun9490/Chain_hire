@@ -147,6 +147,17 @@ type EscrowAccount = {
   isActive: boolean;
 };
 
+// Helper function to validate Solana public key
+const isValidPublicKey = (address: string): boolean => {
+  if (!address || address.trim() === '') return false;
+  try {
+    new PublicKey(address);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 function ClientProjectCard({ address, details }: { address: PublicKey, details: any; }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenSubModal, setIsOpenSubModal] = useState(false);
@@ -161,6 +172,12 @@ function ClientProjectCard({ address, details }: { address: PublicKey, details: 
 
   const [escrowAccount, setEscrowAccount] = useState<EscrowAccount | null>(null);
   const [reloadCounter, setReloadCounter] = useState(0);
+
+  // Validation for escrow setup form
+  const isEscrowFormValid = isValidPublicKey(freelancerAccount) && budget > 0 && totalTasks > 0;
+
+  // Validation for transfer form
+  const isTransferFormValid = isValidPublicKey(newFreelancerAccount);
 
 
   useEffect(() => {
@@ -349,10 +366,13 @@ function ClientProjectCard({ address, details }: { address: PublicKey, details: 
                         }}
                       />
                     </div>
+                    {!isEscrowFormValid && freelancerAccount.length > 0 && !isValidPublicKey(freelancerAccount) && (
+                      <p className="text-sm text-red-400">Please enter a valid Solana wallet address</p>
+                    )}
                     <button
-                      className="w-full btn-chainhire py-3"
+                      className={`w-full btn-chainhire py-3 ${!isEscrowFormValid ? 'opacity-50 cursor-not-allowed' : ''}`}
                       onClick={() => projectSetupMut.mutateAsync({ projectID: details?.id, projectName: details?.name, freelancer: new PublicKey(freelancerAccount), budget: budget, totalTasks: totalTasks })}
-                      disabled={projectSetupMut.isPending}>
+                      disabled={projectSetupMut.isPending || !isEscrowFormValid}>
                       {projectSetupMut.isPending ? (
                         <span className="flex items-center justify-center">
                           <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -475,10 +495,13 @@ function ClientProjectCard({ address, details }: { address: PublicKey, details: 
                   onChange={(e) => setNewFreelancerAccount(e.target.value)}
                 />
               </div>
+              {!isTransferFormValid && newFreelancerAccount.length > 0 && (
+                <p className="text-sm text-red-400">Please enter a valid Solana wallet address</p>
+              )}
               <button
-                className="w-full btn-chainhire py-3"
+                className={`w-full btn-chainhire py-3 ${!isTransferFormValid ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={() => transferProjectMut.mutateAsync({ projectID: details?.id, newFreelancer: new PublicKey(newFreelancerAccount) })}
-                disabled={transferProjectMut.isPending}>
+                disabled={transferProjectMut.isPending || !isTransferFormValid}>
                 {transferProjectMut.isPending ? 'Transferring...' : 'Transfer Project'}
               </button>
             </div>
@@ -640,8 +663,8 @@ function FreelancerProjectCard({ address, details }: { address: PublicKey, detai
                   <button
                     id="request-task-review"
                     className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 ${details?.completedTaskUrl !== ''
-                        ? 'bg-amber-500/20 text-amber-400 cursor-not-allowed'
-                        : 'btn-success hover:translate-y-[-2px]'
+                      ? 'bg-amber-500/20 text-amber-400 cursor-not-allowed'
+                      : 'btn-success hover:translate-y-[-2px]'
                       }`}
                     onClick={() => taskReviewMut.mutateAsync({ projectID: details?.id, projectName: details?.projectName, taskURL: taskURL })}
                     disabled={taskReviewMut.isPending || details?.completedTaskUrl !== '' || details?.isActive === false || !isRequestFormValid()}>
